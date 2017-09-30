@@ -14,7 +14,7 @@ private:
     unsigned int port;
     const int domain = AF_INET;
     const int type = SOCK_DGRAM;
-    struct sockaddr_in myaddr;
+    struct sockaddr_in servaddr;
     int fd;
     char dest[256];
 
@@ -22,44 +22,34 @@ public:
     udp_client(int port, char *src)
     {
         this->port = port;
-
         strncpy(dest, src, strlen(src));
-        std::cout << "Destination is " << dest << std::endl;
 
-        myaddr.sin_family = AF_INET;
-        inet_aton(dest, &myaddr.sin_addr);
-        myaddr.sin_port = htons(port);
-    } bool start_client()
+        servaddr.sin_family = domain;
+        inet_aton(dest, &servaddr.sin_addr);
+        servaddr.sin_port = htons(port);
+    }
+
+    bool start_client()
     {
-        int rv;
-
-        std::cout << "starting client";
+        std::cout << "Starting UDP client for Destination ip:" << dest << " Port:" << port << std::endl;
         fd = socket(domain, type, 0);
-        std::cout.flush();
-
         if (fd < 0)
         {
             std::cout << "socket system call failed\n";
             return false;
         }
-        else
-            std::cout << "fd is " << fd;
-
-        std::cout.flush();
-
-        std::cout.flush();
 
         return true;
-
     }
 
     void send(char *data, int len)
     {
-        int rlen = 0;
+        int rv = 0;
 
-        rlen = sendto(fd, data, len, 0, (struct sockaddr *)&myaddr, sizeof(myaddr));
-        std::cout << "rlen is " << errno;
-
+        if(sendto(fd, data, len, 0, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
+        {
+            std::cout << "UDP send failed with errno: " << errno << std::endl;
+        }
     }
 
     void stop_client()
